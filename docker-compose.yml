@@ -4,14 +4,14 @@ version: '3'
 services:
   api:
     build:
-      context: ./api
+      context: ./
       dockerfile: Dockerfile
       target: base
     command: "debug"
     volumes:
-      - ./api/src:/usr/api/src
-      - ./api/ormconfig.ts:/usr/api/ormconfig.ts
-      - ./api/package.json:/usr/api/package.json
+      - ./src:/usr/api/src
+    env_file:
+      - ./app.env
     ports:
       - '4101:3000'
       - '9229:9229'
