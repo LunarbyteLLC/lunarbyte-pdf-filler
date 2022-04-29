@@ -1,11 +1,11 @@
 import express from "express"
-//@ts-ignore
-import pdfFillForm from "pdf-fill-form";
 
 const port = process.env.PORT;
 const app = express();
 const multer = require('multer');
 const upload = multer();
+const Forms = require('pdf-forms')
+
 
 app.post('/render', upload.single('pdf'), async function(req, res, next) {
     try {
@@ -14,14 +14,21 @@ app.post('/render', upload.single('pdf'), async function(req, res, next) {
             return res.status(400).send('Missing PDF file');
         }
         const data = JSON.parse(JSON.stringify(req.body));
-        const options = data['options'];
-        delete data['options'];
-        if (Object.keys(data).length === 0 || !options) {
-            return res.status(400).send('Missing data or options');
+        const yourTaxes = Forms.load(pdf.buffer);
+        console.log(yourTaxes);
+        const fields = await yourTaxes.getFields();
+        console.log(fields);
+
+        const fillIn = {}
+        for (const key in fields) { // fill everything with a 0
+            // @ts-ignore
+            fillIn[key] = '0';
         }
-        const filledPDF = await pdfFillForm.writeBuffer(pdf.buffer, data, options);
+
+        const filledOut = await yourTaxes.fillOut(fillIn);
+
         res.set('Content-Type', 'application/pdf');
-        return res.send(Buffer.from(filledPDF));
+        return res.send('temp');
     } catch (error) {
         console.error('Error filling pdf', error);
         next(error);
