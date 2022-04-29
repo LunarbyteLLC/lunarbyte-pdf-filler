@@ -8,23 +8,24 @@ const multer = require('multer');
 const upload = multer();
 
 app.post('/render', upload.single('pdf'), async function(req, res, next) {
-    const pdf = req.file as Express.Multer.File;
-    const data = JSON.parse(JSON.stringify(req.body));
-    const options = data['options'];
-    delete data['options'];
-
-    const filledPDF = await pdfFillForm.writeBuffer(pdf.buffer, flagMissingFields(data), options);
-    res.set('Content-Type', 'application/pdf');
-    return res.send(Buffer.from(filledPDF));
+    try {
+        const pdf = req.file as Express.Multer.File;
+        if (!pdf) {
+            return res.status(400).send('Missing PDF file');
+        }
+        const data = JSON.parse(JSON.stringify(req.body));
+        const options = data['options'];
+        delete data['options'];
+        if (Object.keys(data).length === 0 || !options) {
+            return res.status(400).send('Missing data or options');
+        }
+        const filledPDF = await pdfFillForm.writeBuffer(pdf.buffer, data, options);
+        res.set('Content-Type', 'application/pdf');
+        return res.send(Buffer.from(filledPDF));
+    } catch (error) {
+        console.error('Error filling pdf', error);
+        next(error);
+    }
 });
 
 app.listen(port, () => console.log(`App listening on ${port}`));
-
-function flagMissingFields(data: any) {
-    for (let field in data) {
-        if (!data[field]) {
-            data[field] = 'MISSING';
-        }
-    }
-    return data;
-}
