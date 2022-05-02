@@ -13,3 +13,4 @@ ENTRYPOINT ["npm", "run"]
 FROM base as prod-builder
 COPY --from=base /usr/api /usr/api
 RUN npm run build
+CMD ["start"]
