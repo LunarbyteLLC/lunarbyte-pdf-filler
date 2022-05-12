@@ -15,12 +15,15 @@ app.post('/render', upload.single('pdf'), async function(req, res, next) {
         }
         const data = JSON.parse(JSON.stringify(req.body));
         const options = data['options'];
+        const fileName = data['fileName'] || 'pdf';
         delete data['options'];
+        delete data['filename'];
         if (Object.keys(data).length === 0 || !options) {
             return res.status(400).send('Missing data or options');
         }
         const filledPDF = await pdfFillForm.writeBuffer(pdf.buffer, data, options);
         res.set('Content-Type', 'application/pdf');
+        res.set('Content-Disposition', `attachment;filename=${fileName}`);
         return res.send(Buffer.from(filledPDF));
     } catch (error) {
         console.error('Error filling pdf', error);
